@@ -1,0 +1,11 @@
+{
+    "baseUrl":"dev.locahost",
+    "port":"3000",
+    "cluster":false,
+    "sessionSecret":"seWrAwutejAthutruBrU2Aj9qud6crew",
+    "mongodb":{
+        "host":"127.0.0.1",
+        "database":"db",
+        "port":27017
+    }
+}
