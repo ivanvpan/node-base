@@ -1,4 +1,11 @@
 var express = require('express'),
+    bodyParser = require('body-parser'),
+    compression = require('compression'),
+    serveStatic = require('serve-static'),
+    cookieParser = require('cookie-parser'),
+    cookieSession = require('cookie-session'),
+    responseTime = require('response-time'),
+    errorHandler = require('errorhandler'),
     http = require('http'),
     nconf = require('nconf'),
     mongoose = require('mongoose'),
@@ -28,37 +35,35 @@ var model = require('./models');
 // setup app
 var app = express();
 
-app.configure(function() {
-    app.use(express.bodyParser());
-    app.use(express.compress());
-    app.use(express.static(basePath + '/public'));
-    app.use(express.cookieParser());
-    app.use(express.cookieSession({secret: nconf.get('sessionSecret')}));
-    app.use(passport.initialize());
-    app.use(passport.session());
-    app.use(require('connect-flash')());
-    app.set('views', basePath +  '/views');
-    app.set('view options', { layout: false });
-    app.set('port', process.env.PORT || nconf.get('port'));
-});
+app.use(bodyParser.json());
+app.use(compression());
+app.use(serveStatic(basePath + '/public'));
+app.use(cookieParser());
+app.use(cookieSession({secret: nconf.get('sessionSecret')}));
+app.use(passport.initialize());
+app.use(passport.session());
+app.use(require('connect-flash')());
+app.set('views', basePath +  '/views');
+app.set('view options', { layout: false });
+app.set('port', process.env.PORT || nconf.get('port'));
 
 // dev and test environments
-app.configure('development', 'test', function () {
+if (!nconf.get('NODE_ENV') || nconf.get('NODE_ENV') == 'development') {
     console.log('starting in development mode');
-    app.use(express.responseTime());
-    app.use(express.logger('dev'));
-    app.use(app.router);
-    app.use(express.errorHandler({
+    app.use(responseTime());
+    //app.use(express.logger('dev'));
+    //app.use(app.router);
+    app.use(errorHandler({
         dumpExceptions:true,
         showStack:true
     }));
-});
+}
 
 // production environment
-app.configure('production', function () {
-    app.use(app.router);
-    app.use(express.errorHandler());
-});
+if (nconf.get('NODE_ENV') == 'production') {
+    //app.use(app.router);
+    //app.use(errorHandler());
+}
 
 // serialize user on login
 passport.serializeUser(function(user, done) {
